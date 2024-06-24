@@ -1,0 +1,344 @@
+﻿@model IEnumerable<MiVeterinaria.Models.UsuarioDb>
+
+@{
+    ViewBag.Title = "Registro Usuarios";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registro de Usuarios</title>
+    <link rel="stylesheet" type="text/css" href="~/Content/styles.css" />
+</head>
+<body>
+    <h1>Registro de Usuarios</h1>
+
+    <div class="row">
+        <table class="table">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Tipo Documento</th>
+                    <th>Numero Documento</th>
+                    <th>Usuario</th>
+                    <th>Rol</th>
+                    <th>Teléfono</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpoUser"></tbody>
+        </table>
+    </div>
+
+    <div class="modal fade" id="modalUser" tabindex="1" role="dialog" aria-labelledby="modalPetLabel" aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="idTituloModalUser">Editar Usuario</h5>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label for="recipient-name" class="col-form-label">Nombre</label>
+                                <input placeholder="Nombre" id="Nombre" type="text" maxlength="100" class="form-control" />
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label for="recipient-name" class="col-form-label">Apellido</label>
+                                <input placeholder="Apellido" id="Apellido" type="text" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label for="recipient-name" class="col-form-label">Tipo de Documento</label>
+                                <select id="TipoDoc" class="form-control">
+                                    <option value="" disabled selected>Seleccione el Tipo de Documento</option>
+                                    <option value="Cédula de Ciudadanía">Cédula de Ciudadanía</option>
+                                    <option value="Tarjeta de Identidad">Tarjeta de Identidad</option>
+                                    <option value="NIT">NIT</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label for="recipient-name" class="col-form-label">Numero Documento</label>
+                                <input placeholder="Numero Documento" id="NumeroDoc" type="text" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label for="recipient-name" class="col-form-label">Nombre Usuario</label>
+                                <input placeholder="Nombre Usuario" id="NombreUsuario" type="text" maxlength="200" class="form-control" />
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label for="recipient-name" class="col-form-label">Contraseña</label>
+                                <input placeholder="Contraseña" id="Contraseña" type="text" maxlength="200" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label for="recipient-name" class="col-form-label">Confirmar Contraseña</label>
+                                <input placeholder="Confirmar Contraseña" id="ConfirmarContraseña" type="text" maxlength="100" class="form-control" />
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label for="recipient-name" class="col-form-label">Telefono</label>
+                                <input placeholder="Telefono" id="Telefono" type="text" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal" onclick="cerrarModal()">
+                        <i class="fas fa-window-close"></i>
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="guardarUsuario()">
+                        <i class="far fa-save"></i>
+                        Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+<script type="text/javascript" charset="utf-8">
+    var listaUser = [];
+    let idUser = '';
+    let User = '';
+    $(document).ready(function () {
+
+        consultarUsuarios();
+
+    });
+    function consultarUsuarios() {
+        $.ajax({
+            url: "/Usuarios/VerUsuarios",
+            method: 'GET',
+            contentType: 'application/json',
+            dataType: "json",
+            success: function (data) {
+                console.log(data);
+                if (data != null) {
+                    listaUser = data;
+                    cargarGridUser(listaUser);
+                    console.log(listaUser);
+                } else {
+                    Swal.fire(
+                        'Opps!',
+                        data.message,
+                        'error');
+                }
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                console.error(xhr, textStatus, errorThrown);
+            }
+        });
+    }
+
+    function cargarGridUser(data) {
+        console.log("//////Cargar Grid");
+        console.log(data);
+
+        $("#cuerpoUser").html("");
+        for (var i = 0; i < data.length; i++) {
+            var tr = `
+         <tr>
+            <th>`+ data[i].Nombre + `</th>
+            <th> `+ data[i].Apellido + `</th>
+            <th> `+ data[i].TipoDoc + `</th>
+            <th> `+ data[i].NumeroDoc + `</th>
+            <th> `+ data[i].Usuario + `</th>
+            <th> `+ data[i].Rol + `</th>
+            <th> `+ data[i].Telefono + `</th>
+            <td>
+            <button  class="btn btn-warning" onclick="editarUsuario(`+ data[i].NumeroDoc + `)"><i class="fas fa-edit"></i> Editar</button>
+            <button class="btn btn-danger" onclick="eliminarUsuario(`+ data[i].NumeroDoc + `)"><i class="far fa-trash-alt"></i> Eliminar</button>
+            </td>
+        </tr>
+        `;
+            $("#cuerpoUser").append(tr);
+        }
+    }
+
+    function eliminarUsuario(idUser) {
+
+        console.log("mandó a eliminar", idUser);
+        Swal.fire({
+            title: '¿Confirmar Eliminacion?',
+            text: "No podrás revertir esto.!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Si, Eliminar!',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                //petición
+                $.ajax({
+                    url: "/Usuarios/EliminarUsuario",
+                    method: 'DELETE',
+                    data: {
+                        idUser: idUser
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        console.log(data);
+                        if (data) {
+                            consultarUsuarios();
+                            Swal.fire(
+                                'Eliminado!',
+                                data.message,
+                                'success');
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                data.message,
+                                'error');
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        modalProcesando(false);
+                        console.error(xhr, textStatus, errorThrown);
+                    }
+                });
+            }
+        });
+    }
+
+    function guardarUsuario(idUser) {
+        var response = validarDataUsuario();
+        if (response.valid) {
+            var nombre = $("#Nombre").val();
+            var apellido = $("#Apellido").val();
+            var tipoDoc = $("#TipoDoc").val();
+            var numeroDoc = $("#NumeroDoc").val();
+            var nombreUsuario = $("#NombreUsuario").val();
+            var contraseña = $("#Contraseña").val();
+            var confirmarContraseña = $("#ConfirmarContraseña").val();
+            var telefono = $("#Telefono").val();
+
+            // Crear un objeto con los datos
+            var parametro = {
+                Nombre: nombre,
+                Apellido: apellido,
+                TipoDoc: tipoDoc,
+                NumeroDoc: numeroDoc,
+                Usuario: nombreUsuario,
+                Contraseña: contraseña,
+                ConfirmarContraseña: confirmarContraseña,
+                Telefono: telefono
+            };
+
+            if (User == '') {
+                modalProcesando(true);
+                $.ajax({
+                    url: "/Usuarios/InsertarUsuario",
+                    method: 'POST',
+                    data: parametro,
+                    dataType: "json",
+                    success: function (data) {
+                        console.log(listaUser);
+                        if (data) {
+                            $('#modalUser').modal('hide');
+                            limpiarForm();
+                            Swal.fire(
+                                'Actualizado!',
+                                data.message,
+                                'success');
+                            consultarUsuarios();
+                        } else {
+                            Swal.fire(
+                                'Opps!',
+                                response.Mensaje,
+                                'error');
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        Swal.fire(
+                            'Opps!',
+                            response.Mensaje,
+                            'error');
+                        console.error(xhr, textStatus, errorThrown);
+                    }
+                });
+            } else {
+                parametro.idUser = User;
+                console.log(parametro);
+                console.log('actualizar');
+                modalProcesando(true);
+                $.ajax({
+                    url: "/Usuarios/ActualizarUsuario",
+                    method: 'PUT',
+                    data: parametro, idUser,
+                    dataType: "json",
+                    success: function (data) {
+                        modalProcesando(false);
+                        console.log(listaUser);
+                        if (data) {
+                            $('#modalUser').modal('hide');
+                            limpiarForm();
+                            Swal.fire(
+                                'Actualizado!',
+                                data.message,
+                                'success');
+                            consultarUsuarios();
+                        } else {
+                            Swal.fire(
+                                'Opps!',
+                                response.Mensaje,
+                                'error');
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        Swal.fire(
+                            'Opps!',
+                            response.Mensaje,
+                            'error');
+                        console.error(xhr, textStatus, errorThrown);
+                    }
+                });
+            }
+        }
+        else {
+            Swal.fire(
+                'Opps!',
+                response.Mensaje,
+                'error');
+        }
+    }
+
+    function limpiarForm() {
+        $('#Nombre').val("");
+        $('#Apellido').val("")
+        $('#TipoDoc').val("")
+        $('#NumeroDoc').val("")
+        $('#NombreUsuario').val("")
+        $('#Contraseña').val("")
+        $('#ConfirmarContraseña').val("")
+        $('#Telefono').val("")
+        idUser = '';
+    }
+
+    function editarUsuario(NumeroDoc) {
+        User = NumeroDoc;
+        let Users = listaUser.find(x => x.NumeroDoc == User);
+        $('#Nombre').val(Users.Nombre);
+        $('#Apellido').val(Users.Apellido)
+        $('#TipoDoc').val(Users.TipoDoc)
+        $('#NumeroDoc').val(Users.NumeroDoc)
+        $('#NombreUsuario').val(Users.Usuario)
+        $('#Contraseña').val(Users.Contraseña)
+        $('#ConfirmarContraseña').val(Users.Contraseña)
+        $('#Telefono').val(Users.Telefono)
+
+        $('#modalUser').modal('show');
+    }
+
+    function cerrarModal() {
+        limpiarForm()
+        $('#modalUser').modal('hide');
+    }</script>
+

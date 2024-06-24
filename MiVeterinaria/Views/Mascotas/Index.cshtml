@@ -1,0 +1,439 @@
+﻿@model IEnumerable<MiVeterinaria.Models.MascotaDb>
+
+@{
+    ViewData["Title"] = "Registro Citas";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Registro Citas</h1>
+
+<p>
+    <button class="btn btn-primary" onclick="crearMascota()">
+        <i class="far fa-book"></i> Nuevo Usuario
+    </button>
+</p>
+
+<div class="row">
+    <table class="table">
+        <thead class="thead-dark">
+            <tr>
+                <th>Nombre</th>
+                <th>Edad Años</th>
+                <th>Sexo</th>
+                <th>Tipo Mascota</th>
+                <th>Descripcion Consulta</th>
+                <th>Nombre Propietario</th>
+                <th>Fecha Cita</th>
+                <th>Fecha Creacion</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="cuerpoMascota"></tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="modalMascota" tabindex="1" role="dialog" aria-labelledby="modalPetLabel" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="idTituloModalMascota">Editar Cita</h5>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label for="recipient-name" class="col-form-label">Nombre</label>
+                            <input placeholder="Nombre" id="Nombre" type="text" maxlength="100" class="form-control" />
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="recipient-name" class="col-form-label">Edad Años</label>
+                            <input placeholder="Edad" id="Edad" type="text" maxlength="100" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label for="recipient-name" class="col-form-label">Sexo</label>
+                            <select id="Sexo" class="form-control">
+                                <option value="" disabled selected>Seleccione el Tipo Sexo</option>
+                                <option value="Macho">Macho</option>
+                                <option value="Hembra">Hembra</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="recipient-name" class="col-form-label">Tipo Mascota</label>
+                            <select id="TipoMascota" class="form-control">
+                                <option value="" disabled selected>Seleccione el Tipo Mascota</option>
+                                <option value="Gato">Gato</option>
+                                <option value="Perro">Perro</option>
+                                <option value="Loro">Loro</option>
+                                <option value="Tortuga">Tortuga</option>
+                                <option value="Hamster">Hamster</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label for="recipient-name" class="col-form-label">Descripcion Consulta</label>
+                            <input placeholder="Descripcion Consulta" id="DescripcionConsulta" type="text" maxlength="200" class="form-control" />
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="recipient-name" class="col-form-label">Nombre Propietario</label>
+                            <input placeholder="Nombre Propietario" id="NombrePropietario" type="text" maxlength="200" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label for="recipient-name" class="col-form-label">Fecha Cita</label>
+                            <input placeholder="Fecha Cita" id="FechaCita" type="date" maxlength="100" class="form-control" />
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="recipient-name" class="col-form-label">Fecha Creacion</label>
+                            <input placeholder="Fecha Creacion" id="FechaCreacion" type="date" maxlength="100" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 form-group">
+                            <label for="recipient-name" class="col-form-label">Estado</label>
+                            <select id="Estado" class="form-control">
+                                <option value="" disabled selected>Seleccione el Estado</option>
+                                <option value="Activo">Activo</option>
+                                <option value="Cancelado">Cancelado</option>
+                                <option value="Pendiente">Pendiente</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal" onclick="cerrarModal()">
+                    <i class="fas fa-window-close"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-success" onclick="guardarMascota()">
+                    <i class="far fa-save"></i>
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" charset="utf-8">
+    var listaMascota = [];
+    let idMascota = '';
+    let Mascota = '';
+    $(document).ready(function () {
+
+        consultarMascota();
+
+    });
+    function consultarMascota() {
+        $.ajax({
+            url: "/Mascotas/VerMascotas",
+            method: 'GET',
+            contentType: 'application/json',
+            dataType: "json",
+            success: function (data) {
+                console.log(data);
+                if (data != null) {
+                    listaMascota = data;
+                    cargarGridUser(listaMascota);
+                    console.log(listaMascota);
+                } else {
+                    Swal.fire(
+                        'Opps!',
+                        data.message,
+                        'error');
+                }
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                console.error(xhr, textStatus, errorThrown);
+            }
+        });
+    }
+
+    function cargarGridUser(data) {
+        console.log("//////Cargar Grid");
+        console.log(data);
+
+        $("#cuerpoMascota").html("");
+        for (var i = 0; i < data.length; i++) {
+            var tr = `
+         <tr>
+            <th>`+ data[i].Nombre + `</th>
+            <th> `+ data[i].Edad + `</th>
+            <th> `+ data[i].Sexo + `</th>
+            <th> `+ data[i].Tipo_Mascota + `</th>
+            <th> `+ data[i].Descripcion_Consulta + `</th>
+            <th> `+ data[i].Nombre_Propietario + `</th>
+            <th> `+ data[i].Fecha_Cita + `</th>
+            <th> `+ data[i].Fecha_Creacion + `</th>
+            <th> `+ data[i].Estado + `</th>
+            <td>
+            <button  class="btn btn-warning" onclick="editarMascota('`+ data[i].Id + `')"><i class="fas fa-edit"></i> Editar</button>
+            <button class="btn btn-danger" onclick="eliminarMascota('`+ data[i].Id + `')"><i class="far fa-trash-alt"></i> Eliminar</button>
+            </td>
+        </tr>
+        `;
+            $("#cuerpoMascota").append(tr);
+        }
+    }
+
+    function crearMascota() {
+        $('#idTituloModalMascota').html("Crear Cita");
+        $('#modalMascota').modal('show');
+    }
+
+    function eliminarMascota(idMascota) {
+
+        console.log("mandó a eliminar", idMascota);
+        Swal.fire({
+            title: '¿Confirmar Eliminacion?',
+            text: "No podrás revertir esto.!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Si, Eliminar!',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                //petición
+                $.ajax({
+                    url: "/Mascotas/EliminarMascota",
+                    method: 'DELETE',
+                    data: {
+                        idMascota: idMascota
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        console.log(data);
+                        if (data) {
+                            consultarMascota();
+                            Swal.fire(
+                                'Eliminado!',
+                                data.message,
+                                'success');
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                data.message,
+                                'error');
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        console.error(xhr, textStatus, errorThrown);
+                    }
+                });
+            }
+        });
+    }
+
+    function guardarMascota(idMascota) {
+        var response = validarDataMascota();
+        if (response.valid) {
+            var nombre = $('#Nombre').val();
+            var edad = $('#Edad').val();
+            var sexo = $('#Sexo').val();
+            var tipoMascota = $('#TipoMascota').val();
+            var descripcionConsulta = $('#DescripcionConsulta').val();
+            var nombrePropietario = $('#NombrePropietario').val();
+            var fechaCita = $('#FechaCita').val();
+            var fechaCreacion = $('#FechaCreacion').val();
+            var estado = $('#Estado').val();
+
+            // Crear un objeto con los datos
+            var parametro = {
+                Nombre: nombre,
+                Edad: edad,
+                Sexo: sexo,
+                Tipo_Mascota: tipoMascota,
+                Descripcion_Consulta: descripcionConsulta,
+                Nombre_Propietario: nombrePropietario,
+                Fecha_Cita: fechaCita,
+                Fecha_Creacion: fechaCreacion,
+                Estado: estado
+            };
+
+            if (Mascota == '') {
+                $.ajax({
+                    url: "/Mascotas/InsertarMascota",
+                    method: 'POST',
+                    data: parametro,
+                    dataType: "json",
+                    success: function (data) {
+                        console.log(listaMascota);
+                        if (data) {
+                            $('#modalMascota').modal('hide');
+                            limpiarForm();
+                            Swal.fire(
+                                'Actualizado!',
+                                data.message,
+                                'success');
+                            consultarMascota();
+                        } else {
+                            Swal.fire(
+                                'Opps!',
+                                response.Mensaje,
+                                'error');
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        Swal.fire(
+                            'Opps!',
+                            response.Mensaje,
+                            'error');
+                        console.error(xhr, textStatus, errorThrown);
+                    }
+                });
+            } else {
+                parametro.idMascota = Mascota;
+                console.log(parametro);
+                console.log('actualizar');
+                $.ajax({
+                    url: "/Mascotas/ActualizarMascota",
+                    method: 'PUT',
+                    data: parametro, idMascota,
+                    dataType: "json",
+                    success: function (data) {
+                        console.log(listaMascota);
+                        if (data) {
+                            $('#modalMascota').modal('hide');
+                            limpiarForm();
+                            Swal.fire(
+                                'Actualizado!',
+                                data.message,
+                                'success');
+                            consultarMascota();
+                        } else {
+                            Swal.fire(
+                                'Opps!',
+                                response.Mensaje,
+                                'error');
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        Swal.fire(
+                            'Opps!',
+                            response.Mensaje,
+                            'error');
+                        console.error(xhr, textStatus, errorThrown);
+                    }
+                });
+            }
+        }
+        else {
+            Swal.fire(
+                'Opps!',
+                response.Mensaje,
+                'error');
+        }
+    }
+
+    function validarDataMascota() {
+        var response = {
+            valid: true,
+            Mensaje: "",
+        };
+
+        // Validar Nombre
+        if ($("#Nombre").val().trim() === "") {
+            response.valid = false
+            response.Mensaje = "El nombre es obligatorio."
+            return response;
+        }
+
+        // Validar Edad
+        if ($("#Edad").val().trim() === "") {
+            response.valid = false
+            response.Mensaje = "La Edad es obligatorio."
+            return response;
+        }
+
+        // Validar Sexo
+        if ($("#Sexo").val() === null || $("#Sexo").val() === "") {
+            response.valid = false
+            response.Mensaje = "El Sexo es obligatorio."
+            return response;
+        }
+
+        // Validar TipoMascota
+        if ($("#TipoMascota").val() === null || $("#TipoMascota").val() === "") {
+            response.valid = false
+            response.Mensaje = "El Tipo de Mascota es obligatorio."
+            return response;
+        }
+
+        // Validar DescripcionConsulta
+        if ($("#DescripcionConsulta").val().trim() === "") {
+            response.valid = false
+            response.Mensaje = "La descripcion de la Consulta es obligatorio."
+            return response;
+        }
+
+        // Validar NombrePropietario
+        if ($("#NombrePropietario").val().trim() === "") {
+            response.valid = false
+            response.Mensaje = "El Nombre del Propietario es obligatorio."
+            return response;
+        }       
+
+        // Validar FechaCita
+        if ($("#FechaCita").val().trim() === "") {
+            response.valid = false
+            response.Mensaje = "La Fecha de la Cita es obligatorio."
+            return response;
+        }        
+
+        // Validar FechaCreacion
+        if ($("#FechaCreacion").val().trim() === "") {
+            response.valid = false
+            response.Mensaje = "La Fecha de Creacion es obligatorio."
+            return response;
+        }
+
+        // Validar Estado
+        if ($("#Estado").val() === null || $("#Estado").val() === "") {
+            response.valid = false
+            response.Mensaje = "El Estado es obligatorio."
+            return response;
+        }
+
+        return response;
+    };
+
+    function limpiarForm() {
+        $('#Nombre').val("");
+        $('#Edad').val("")
+        $('#Sexo').val("")
+        $('#TipoMascota').val("")
+        $('#DescripcionConsulta').val("")
+        $('#NombrePropietario').val("")
+        $('#FechaCita').val("")
+        $('#FechaCreacion').val("")
+        $('#Estado').val("")
+        idMascota = '';
+    }
+
+    function editarMascota(Id) {
+        Mascota = Id;
+        let Mascotas = listaMascota.find(x => x.Id == Mascota);
+        $('#Nombre').val(Mascotas.Nombre);
+        $('#Edad').val(Mascotas.Edad)
+        $('#Sexo').val(Mascotas.Sexo)
+        $('#TipoMascota').val(Mascotas.Tipo_Mascota)
+        $('#DescripcionConsulta').val(Mascotas.Descripcion_Consulta)
+        $('#NombrePropietario').val(Mascotas.Nombre_Propietario)
+        $('#FechaCita').val(Mascotas.Fecha_Cita)
+        $('#FechaCreacion').val(Mascotas.Fecha_Creacion)
+        $('#Estado').val(Mascotas.Estado)
+
+        $('#modalMascota').modal('show');
+    }
+
+    function cerrarModal() {
+        limpiarForm()
+        $('#modalMascota').modal('hide');
+    }</script>

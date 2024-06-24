@@ -1,0 +1,345 @@
+﻿@model IEnumerable<MiVeterinaria.Models.ProductoDb>
+
+@{
+    ViewBag.Title = "Inicio";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inicio de Sesión</title>
+    <link rel="stylesheet" type="text/css" href="~/Content/styles.css" />
+</head>
+<body>
+    @if (User.IsInRole("Administrador"))
+    {
+        <p>
+            <button class="btn btn-primary" onclick="crearProducto()">
+                <i class="far fa-book"></i> Nuevo Producto
+            </button>
+        </p>
+    }
+    <div class="container">
+        <h2>Lista de Productos</h2>
+        <div class="row" id="cuerpoProducto"></div>
+    </div>
+    <div class="modal fade" id="modalProducto" tabindex="1" role="dialog" aria-labelledby="modalPetLabel" aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="idTituloModalProducto">Editar Cita</h5>
+                </div>
+                <div class="modal-body">
+                    <form id="productoForm" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label for="Nombre" class="col-form-label">Nombre</label>
+                                <input placeholder="Nombre" id="Nombre" name="Nombre" type="text" maxlength="100" class="form-control" />
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label for="Caracteristica">Caracteristica</label>
+                                <input id="Caracteristica" name="Caracteristica" type="text" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label for="Valor">Valor</label>
+                                <input id="Valor" name="Valor" type="number" step="0.01" class="form-control" />
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label for="Imagen">Imagen</label>
+                                <input id="Imagen" name="imagen" type="file" class="form-control" />
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-danger" data-dismiss="modal" onclick="cerrarModal()">
+                            <i class="fas fa-window-close"></i>
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="guardarProducto()">
+                            <i class="far fa-save"></i>
+                            Guardar
+                        </button>
+                    </form>
+                </div>
+                @*<div class="modal-footer">
+
+                    </div>*@
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+<script type="text/javascript" charset="utf-8">
+    var listaProducto = [];
+    let idProducto = '';
+    let Producto = '';
+    $(document).ready(function () {
+        consultarProducto();
+    });
+    function consultarProducto() {
+        $.ajax({
+            url: "/Home/ConsultarProducto",
+            method: 'GET',
+            contentType: 'application/json',
+            dataType: "json",
+            success: function (data) {
+                console.log(data);
+                if (data != null) {
+                    listaProducto = data;
+                    cargarGridProducto(listaProducto);
+                    console.log(listaProducto);
+                } else {
+                    Swal.fire(
+                        'Opps!',
+                        data.message,
+                        'error');
+                }
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                console.error(xhr, textStatus, errorThrown);
+            }
+        });
+    }
+
+    function cargarGridProducto(data) {
+        console.log("//////Cargar Grid");
+        console.log(data);
+
+        $("#cuerpoProducto").html("");
+        for (var i = 0; i < data.length; i++) {
+            var tr = `
+        <div class="col-md-4">
+            <div class="card">
+                <img src="`+ data[i].Imagen + `" class="card-img-top" />
+                <div class="card-body">
+                    <h5 class="card-title">` + data[i].Nombre + `</h5>
+                    <p class="card-text">` + data[i].Caracteristica + `</p>
+                    <p class="card-text">Valor: $` + data[i].Valor + `</p>
+                    <button class="btn btn-primary" onclick="agregarAlCarrito('` + data[i].Nombre + `', '` + data[i].Valor + `')">Agregar al carrito</button>
+                    @if (User.IsInRole("Administrador"))
+                    {
+                        <button class="btn btn-warning" onclick="editarProducto('` + data[i].Id + `')">Actualizar</button>
+                        <button class="btn btn-danger" onclick="eliminarProducto('` + data[i].Id + `')">Eliminar</button>
+                    }
+                </div>
+             </div>
+        </div>
+        `;
+            $("#cuerpoProducto").append(tr);
+        }
+    }
+
+    function crearProducto() {
+        $('#idTituloModalProducto').html("Crear Producto");
+        $('#modalProducto').modal('show');
+    }
+
+    function eliminarProducto(idProducto) {
+
+        console.log("mandó a eliminar", idProducto);
+        Swal.fire({
+            title: '¿Confirmar Eliminacion?',
+            text: "No podrás revertir esto.!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Si, Eliminar!',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                //petición
+                $.ajax({
+                    url: "/Home/EliminarProducto",
+                    method: 'DELETE',
+                    data: {
+                        idProducto: idProducto
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        console.log(data);
+                        if (data) {
+                            consultarProducto();
+                            Swal.fire(
+                                'Eliminado!',
+                                data.message,
+                                'success');
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                data.message,
+                                'error');
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        console.error(xhr, textStatus, errorThrown);
+                    }
+                });
+            }
+        });
+    }
+
+    function guardarProducto(idProducto) {
+        var response = validarDataProducto();
+        if (response.valid) {
+            var form = $('#productoForm')[0];
+            var formData = new FormData(form);
+
+            var nombre = formData.get("Nombre");
+            var caracteristica = formData.get("Caracteristica");
+            var valor = formData.get("Valor");
+            var imagen = formData.get("imagen");
+
+            // Crear un objeto con los datos
+            var parametro = {
+                Nombre: nombre,
+                Caracteristica: caracteristica,
+                Valor: valor,
+            };
+
+            formData.append("Nombre", nombre);
+            formData.append("Caracteristica", caracteristica);
+            formData.append("Valor", valor);
+
+            // Agregar la imagen a formData
+            formData.append("Imagen", imagen);
+
+            if (Producto == '') {
+                $.ajax({
+                    url: "/Home/InsertarProducto",
+                    method: 'POST',
+                    data: formData,
+                    dataType: "json",
+                    contentType: false, 
+                    processData: false, 
+                    success: function (data) {
+                        console.log(listaProducto);
+                        if (data) {
+                            $('#modalProducto').modal('hide');
+                            limpiarForm();
+                            Swal.fire(
+                                'Actualizado!',
+                                data.message,
+                                'success');
+                            consultarProducto();
+                        } else {
+                            Swal.fire(
+                                'Opps!',
+                                response.Mensaje,
+                                'error');
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        Swal.fire(
+                            'Opps!',
+                            response.Mensaje,
+                            'error');
+                        console.error(xhr, textStatus, errorThrown);
+                    }
+                });
+            } else {
+                parametro.idProducto = Producto;
+                console.log(parametro);
+                console.log('actualizar');
+                $.ajax({
+                    url: "/Home/ActualizarProducto",
+                    method: 'PUT',
+                    data: parametro, Producto,
+                    dataType: "json",
+                    success: function (data) {
+                        console.log(listaProducto);
+                        if (data) {
+                            $('#modalProducto').modal('hide');
+                            limpiarForm();
+                            Swal.fire(
+                                'Actualizado!',
+                                data.message,
+                                'success');
+                            consultarProducto();
+                        } else {
+                            Swal.fire(
+                                'Opps!',
+                                response.Mensaje,
+                                'error');
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        Swal.fire(
+                            'Opps!',
+                            response.Mensaje,
+                            'error');
+                        console.error(xhr, textStatus, errorThrown);
+                    }
+                });
+            }
+        }
+        else {
+            Swal.fire(
+                'Opps!',
+                response.Mensaje,
+                'error');
+        }
+    }
+
+    function validarDataProducto() {
+        var response = {
+            valid: true,
+            Mensaje: "",
+        };
+
+        // Validar Nombre
+        if ($("#Nombre").val().trim() === "") {
+            response.valid = false
+            response.Mensaje = "El nombre es obligatorio."
+            return response;
+        }
+
+        // Validar Caracteristica
+        if ($("#Caracteristica").val().trim() === "") {
+            response.valid = false
+            response.Mensaje = "La Caracteristica es obligatorio."
+            return response;
+        }
+
+        // Validar Valor
+        if ($("#Valor").val().trim() === "") {
+            response.valid = false
+            response.Mensaje = "El Valor es obligatorio."
+            return response;
+        }
+
+        // Validar Imagen
+        if ($("#Imagen").val().trim() === "") {
+            response.valid = false
+            response.Mensaje = "La Imagen es obligatorio."
+            return response;
+        }
+
+        return response;
+    };
+
+    function limpiarForm() {
+        $('#Nombre').val("");
+        $('#Caracteristica').val("")
+        $('#Valor').val("")
+        $('#Imagen').val("")
+        idProducto = '';
+    }
+
+    function editarProducto(Id) {
+        Producto = Id;
+        let Productos = listaProducto.find(x => x.Id == Producto);
+        $('#Nombre').val(Productos.Nombre);
+        $('#Caracteristica').val(Productos.Caracteristica)
+        $('#Valor').val(Productos.Valor)
+
+        $('#modalProducto').modal('show');
+    }
+
+    function cerrarModal() {
+        limpiarForm()
+        $('#modalProducto').modal('hide');
+    }</script>
