@@ -199,13 +199,7 @@
                 Caracteristica: caracteristica,
                 Valor: valor,
             };
-
-            formData.append("Nombre", nombre);
-            formData.append("Caracteristica", caracteristica);
-            formData.append("Valor", valor);
-
-            // Agregar la imagen a formData
-            formData.append("Imagen", imagen);
+        
 
             if (Producto == '') {
                 $.ajax({
@@ -213,8 +207,8 @@
                     method: 'POST',
                     data: formData,
                     dataType: "json",
-                    contentType: false, 
-                    processData: false, 
+                    contentType: false,
+                    processData: false,
                     success: function (data) {
                         console.log(listaProducto);
                         if (data) {
@@ -241,14 +235,14 @@
                     }
                 });
             } else {
-                parametro.idProducto = Producto;
-                console.log(parametro);
-                console.log('actualizar');
+                formData.append("Id", Producto);
                 $.ajax({
                     url: "/Home/ActualizarProducto",
-                    method: 'PUT',
-                    data: parametro, Producto,
+                    method: 'POST',
+                    data: formData,
                     dataType: "json",
+                    contentType: false,
+                    processData: false,
                     success: function (data) {
                         console.log(listaProducto);
                         if (data) {
@@ -327,6 +321,7 @@
         $('#Valor').val("")
         $('#Imagen').val("")
         idProducto = '';
+        Producto = '';
     }
 
     function editarProducto(Id) {

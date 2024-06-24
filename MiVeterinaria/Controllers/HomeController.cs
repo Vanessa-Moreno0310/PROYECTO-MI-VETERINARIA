@@ -42,11 +42,20 @@ namespace MiVeterinaria.Controllers
             return Json(response);
         }
 
-        [HttpPut]
-        public ActionResult ActualizarProducto(ProductoDb modelo, string idProducto)
+        [HttpPost]
+        public ActionResult ActualizarProducto(ProductoDb modelo, HttpPostedFileBase imagen)
         {
             ProductoServices service = new ProductoServices();
-            var response = service.ActualizarProducto(modelo, idProducto);
+
+            if (imagen != null && imagen.ContentLength > 0)
+            {
+                var fileName = Path.GetFileName(imagen.FileName);
+                var path = Path.Combine(Server.MapPath("~/Content/Images/"), fileName);
+                imagen.SaveAs(path);
+                modelo.Imagen = "/Content/Images/" + fileName; // Ruta relativa para la imagen
+            }
+
+            var response = service.ActualizarProducto(modelo);
 
             return Json(response);
         }

@@ -56,12 +56,12 @@ namespace MiVeterinaria.Services
         /// </summary>
         /// <param name="mascota">Objeto del producto</param>
         /// <returns>Retorna True si el producto se actualizo correctamente y False cuando no se logro actualizar</returns>
-        public ResponseDb ActualizarProducto(ProductoDb producto, string idProducto)
+        public ResponseDb ActualizarProducto(ProductoDb producto)
         {
             try
             {
                 var document = MongoContext.Database().GetCollection<ProductoDb>("ProductoDb");
-                var filter = Builders<ProductoDb>.Filter.Eq(c => c.Id, idProducto);
+                var filter = Builders<ProductoDb>.Filter.Eq(c => c.Id, producto.Id);
                 var update = Builders<ProductoDb>.Update
                     .Set(u => u.Nombre, producto.Nombre)
                     .Set(u => u.Caracteristica, producto.Caracteristica)
