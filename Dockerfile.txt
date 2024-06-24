@@ -1,0 +1,22 @@
+# Usa una imagen base de .NET SDK para construir la aplicación
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build-env
+WORKDIR /app
+
+# Copia los archivos del proyecto y restaura las dependencias
+COPY *.csproj ./
+RUN dotnet restore
+
+# Copia el resto de los archivos del proyecto y compila
+COPY . ./
+RUN dotnet publish -c Release -o out
+
+# Usa una imagen base de .NET Runtime para ejecutar la aplicación
+FROM mcr.microsoft.com/dotnet/aspnet:5.0
+WORKDIR /app
+COPY --from=build-env /app/out .
+
+# Expone el puerto en el que la aplicación escuchará
+EXPOSE 80
+
+# Define el comando de entrada
+ENTRYPOINT ["dotnet", "TuProyecto.dll"]
